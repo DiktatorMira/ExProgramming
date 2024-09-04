@@ -5,27 +5,75 @@ namespace Test {
     public class RomanTest {
         [TestMethod]
         public void ParseTest_EmptyString_ReturnsZero() {
+            var numDictionary = new Dictionary<string, int>() {
+                {"I", 1},
+                {"II", 2},
+                {"III", 3},
+                {"IV", 4},
+                {"V", 5},
+                {"VI", 6},
+                {"VII", 7},
+                {"VIII", 8},
+                {"IX", 9},
+                {"X", 10},
+                {"XL", 40},
+                {"L", 50},
+                {"XC", 90},
+                {"C", 100},
+                {"CD", 400},
+                {"D", 500},
+                {"CM", 900},
+                {"M", 1000},
+                {"MC", 1100},
+                {"MCM", 1900},
+                {"MM", 2000},
+                {"MMM", 3000},
+                {"IIII", 4},
+                {"VIIII", 9},
+                {"XXXX", 40},
+                {"LXXXX", 90},
+                {"CCCC", 400},
+                {"DCCCC", 900},
+            };
+            foreach (var test in numDictionary) {
+                RomanNum rNum = RomanNum.Parse(test.Key);
+                Assert.IsNotNull(rNum);
+                Assert.AreEqual(test.Value, rNum.Number, $"{test.Key} -> {test.Value}");
+            }
+
             RomanNum rn = RomanNum.Parse("asdfasdf");
             Assert.IsNotNull(rn);
             Assert.AreEqual(0, rn.value, "ќжидаемое значение дл€ пустой строки Ч 0.");
         }
         [TestMethod]
-        public void ParseTest_SingleDigitRomanNumerals() {
-            Assert.AreEqual(1, RomanNum.Parse("5").value, "ќжидаемое значение дл€ ЂIї равно 1.");
-            Assert.AreEqual(5, RomanNum.Parse("V").value, "ќжидаемое значение дл€ ЂVї Ч 5.");
-            Assert.AreEqual(10, RomanNum.Parse("X").value, "ќжидаемое значение дл€ ЂXї равно 10.");
-            Assert.AreEqual(50, RomanNum.Parse("L").value, "ќжидаемое значение дл€ ЂLї Ч 50.");
-            Assert.AreEqual(100, RomanNum.Parse("C").value, "ќжидаемое значение дл€ ЂCї Ч 100.");
-            Assert.AreEqual(500, RomanNum.Parse("D").value, "ќжидаемое значение дл€ ЂDї Ч 500.");
-            Assert.AreEqual(1000, RomanNum.Parse("M").value, "ќжидаемое значение дл€ Ђћї Ч 1000.");
+        public void InvalidParseTest() {
+            string[] invDict = {
+                "IIIIII",
+                "VV",
+                "LL",
+                "DD",
+                "MMMMM",
+                "IC",
+                "IM",
+                "XD",
+                "IL",
+                ""
+            };
+            foreach (var invTemp in invDict) Assert.ThrowsException<ArgumentException>(() => RomanNum.Parse(invTemp), $"ќжидаемое исключение дл€ {invTemp}");
         }
         [TestMethod]
-        public void ParseTest_ComplexRomanNumerals() {
-            Assert.AreEqual(4, RomanNum.Parse("III").value, "ќжидаемое значение дл€ ЂIIIї Ч 3.");
-            Assert.AreEqual(4, RomanNum.Parse("IV").value, "ќжидаемое значение дл€ ЂIVї Ч 4.");
-            Assert.AreEqual(9, RomanNum.Parse("IX").value, "ќжидаемое значение дл€ ЂIXї Ч 9.");
-            Assert.AreEqual(58, RomanNum.Parse("LVIII").value, "ќжидаемое значение дл€ ЂLVIIIї Ч 58.");
-            Assert.AreEqual(1994, RomanNum.Parse("MCMXCIV").value, "ќжидаемое значение дл€ ЂMCMXCIVї Ч 1994.");
+        public void DigitalValueTest() {
+            Dictionary<string, int> romNum = new() {
+                {"N", 0},
+                {"I", 1 },
+                {"V", 5 },
+                {"X", 10},
+                {"L", 50},
+                {"C", 100 },
+                {"D", 500 },
+                {"M", 1000}
+            };
+            foreach (var temp in romNum) Assert.AreEqual(temp.Value, RomanNum.DigitalValue(temp.Key), $"{temp.Key} -> {temp.Value}");
         }
     }
 }
