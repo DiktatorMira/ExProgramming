@@ -3,6 +3,16 @@ using App;
 namespace Test {
     [TestClass]
     public class RomanNumberTest {
+        Dictionary<string, int> digitValues = new() {
+            {"N", 0},
+            {"I", 1 },
+            {"V", 5 },
+            {"X", 10},
+            {"L", 50},
+            {"C", 100 },
+            {"D", 500 },
+            {"M", 1000}
+        };
         [TestMethod]
         public void ParseTest() {
             Dictionary<String, int> romanMap = new() {
@@ -54,6 +64,7 @@ namespace Test {
                 Assert.IsNotNull(rn);
                 Assert.AreEqual(test.Value, rn.Number, $"{test.Key} -> {test.Value}");
             }
+
             Dictionary<string, (char, int)[]> symbMap = new() {
                 {"W", new[] {('W', 0)}},
                 {"Q", new[] {('Q', 0)}},
@@ -77,6 +88,29 @@ namespace Test {
                     );
                 }
             }
+
+            Dictionary<String, Object[]> invalidOrderTestCases = new() {
+                { "IM",  ['I', 'M', 0] },
+                { "XIM", ['I', 'M', 1] },
+                { "IMX", ['I', 'M', 0] },
+                { "XMD", ['X', 'M', 0] },
+                { "XID", ['I', 'D', 1] },
+                { "ID", ['I', 'D', 0] },
+                { "VX", ['V', 'X', 0] },
+                { "LC", ['L', 'C', 0] },
+                { "VV", ['V', 'V', 0] },
+                { "LL", ['L', 'L', 0] }
+            };
+            foreach (var testCase in invalidOrderTestCases) {
+                var ex = Assert.ThrowsException<FormatException>(
+                    () => RomanNum.Parse(testCase.Key),
+                    $"{nameof(FormatException)} Парсинг '{testCase.Key}' должен выбросить исключение"
+                );
+                Assert.IsTrue(
+                    ex.Message.Contains($"Неверный порядок '{testCase.Value[0]}' перед '{testCase.Value[1]}' в позиции {testCase.Value[2]}"),
+                    $"FormatException должен содержать данные о неправильно упорядоченных символах. TestCase: '{testCase.Key}', ex.Message: '{ex.Message}'"
+                );
+            }
         }
         [TestMethod]
         public void InvalidParseTest()  {
@@ -96,21 +130,11 @@ namespace Test {
         }
         [TestMethod]
         public void DigitalValueTest() {
-            Dictionary<string, int> testCases = new() {
-                {"N", 0},
-                {"I", 1 },
-                {"V", 5 },
-                {"X", 10},
-                {"L", 50},
-                {"C", 100 },
-                {"D", 500 },
-                {"M", 1000}
-            };
-            foreach (var test in testCases) Assert.AreEqual(test.Value, RomanNum.DigitalValue(test.Key), $"{test.Key} -> {test.Value}");
+            foreach (var test in digitValues) Assert.AreEqual(test.Value, RomanNum.DigitalValue(test.Key), $"{test.Key} -> {test.Value}");
             Random rand = new();
             for (int i = 0; i < 100; ++i) {
                 string invDigit = ((char)rand.Next(256)).ToString();
-                if (testCases.ContainsKey(invDigit)) {
+                if (digitValues.ContainsKey(invDigit)) {
                     --i;
                     continue;
                 }
@@ -119,6 +143,23 @@ namespace Test {
                 Assert.IsTrue(ex.Message.Contains($"«digit» имеет недопустимое значение «{invDigit}»'"), $"Сообщение ArgemntException должно содержать <'digit' имеет недопустимое значение '{invDigit}'>");
                 Assert.IsTrue(ex.Message.Contains(nameof(RomanNum)) && ex.Message.Contains(nameof(RomanNum.DigitalValue)), "Сообщение ArgemntException должно содержать «digit»");
             }
+        }
+        [TestMethod]
+        public void ToStringTest() {
+            Dictionary<int, String> testCases = new() {
+                {2, "II"},
+                {3343, "MMMCCCXLIII"},
+                {4, "IV" },
+                {44, "XLIV" },
+                {9,"IX" },
+                {90, "XC" },
+                {1400, "MCD" },
+                {999, "CMXCIX" },
+                {444, "CDXLIV" },
+                {990, "CMXC" }
+            };
+            digitValues.Keys.ToList().ForEach(i => testCases.Add(digitValues[i], i));
+            foreach (var test in testCases) Assert.AreEqual(test.Value, new RomanNum(test.Key).ToString(), $"ToString({test.Key}) --> {test.Value}");
         }
     }
 }
