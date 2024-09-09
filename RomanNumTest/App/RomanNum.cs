@@ -3,7 +3,10 @@
 namespace App {
     public record RomanNum(int value) {
         private readonly int number = value;
-        public int Number => number;
+        public int Number {
+            get => number;
+            init { if(number == 0) number = value; }
+        }
         public static RomanNum Parse(string input){
             int value = 0, prevDigit = 0, pos = input.Length;
             List<string> errors = new();
@@ -39,6 +42,7 @@ namespace App {
             "W" => 5000,
             _ => throw new ArgumentException($"{nameof(RomanNum)} :: {nameof(DigitalValue)}: «digit» имеет недопустимое значение «{digit}»")
         };
+        public RomanNum Plus(RomanNum val) => this with { Number = Number + val.Number };
         public override string ToString() {
             if (number == 0) return "N";
             Dictionary<int, string> parts = new() {
@@ -59,11 +63,6 @@ namespace App {
                 }
             }
             return sb.ToString();
-        }
-    }
-    public class Program {
-        public static void Main(string[] args) {
-        
         }
     }
 }

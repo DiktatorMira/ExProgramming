@@ -89,7 +89,7 @@ namespace Test {
                 }
             }
 
-            Dictionary<String, Object[]> invalidOrderTestCases = new() {
+            Dictionary<string, Object[]> invalidOrderTestCases = new() {
                 { "IM",  ['I', 'M', 0] },
                 { "XIM", ['I', 'M', 1] },
                 { "IMX", ['I', 'M', 0] },
@@ -160,6 +160,29 @@ namespace Test {
             };
             digitValues.Keys.ToList().ForEach(i => testCases.Add(digitValues[i], i));
             foreach (var test in testCases) Assert.AreEqual(test.Value, new RomanNum(test.Key).ToString(), $"ToString({test.Key}) --> {test.Value}");
+        }
+        [TestMethod]
+        public void PlusTest() {
+            RomanNum num1 = new(1), num2 = new(2), num3 = num1.Plus(num2);
+            Assert.IsNotNull(num3);
+            Assert.IsInstanceOfType(num3, typeof(RomanNum));
+            Assert.AreNotSame(num3, num1);
+            Assert.AreNotSame(num3, num2);
+            Assert.AreEqual(num1.Number + num2.Number, num3.Number);
+            var testCases = new[] {
+                (first: "IV", second: "VI", expected: "X"),
+                (first: "X", second: "V", expected: "XV"),
+                (first: "XL", second: "IX", expected: "XLIX"),
+                (first: "L", second: "L", expected: "C"),
+                (first: "C", second: "D", expected: "DC"),
+                (first: "MMM", second: "MMM", expected: "MMMMMM")
+            };
+            foreach (var testCase in testCases) {
+                num1 = RomanNum.Parse(testCase.first);
+                num2 = RomanNum.Parse(testCase.second);
+                num3 = num1.Plus(num2);
+                Assert.AreEqual(testCase.expected, num3.ToString(), $"ќжидалось {testCase.first} + {testCase.second} = {testCase.expected}, но получено {num3}");
+            }
         }
     }
 }
