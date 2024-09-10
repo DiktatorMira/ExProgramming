@@ -8,26 +8,36 @@ namespace App {
             init { if(number == 0) number = value; }
         }
         public static RomanNum Parse(string input){
-            int value = 0, prevDigit = 0, pos = input.Length;
-            List<string> errors = new();
+            if (string.IsNullOrEmpty(input)) throw new FormatException($"{nameof(RomanNum)}.{nameof(Parse)}: Входная строка пуста или имеет значение null.");
+
+            int value = 0, prevDigit = 0, pos = input.Length, maxDigit = 0;
+            bool wasLess = false;
+
             foreach (char c in input.Reverse()) {
                 pos -= 1;
                 int digit;
+
                 try { digit = DigitalValue(c.ToString()); }
-                catch {
-                    errors.Add($"Недопустимый символ '{c}' в позиции {pos}");
-                    continue;
-                }
+                catch { throw new FormatException($"{nameof(RomanNum)}.{nameof(Parse)}: Недопустимый символ '{c}' в позиции {pos}"); }
 
                 if (digit != 0 && prevDigit / digit > 10) throw new FormatException($"Неверный порядок '{c}' перед '{input[pos + 1]}' в позиции {pos}");
-                if (prevDigit > digit &&!((digit == 1 && (prevDigit == 5 || prevDigit == 10)) ||(digit == 10 && (prevDigit == 50 || prevDigit == 100)) || (digit == 100 && (prevDigit == 500 || prevDigit == 1000)))) {
-                    throw new FormatException($"Недопустимая комбинация '{c}' в позиции {pos}");
+
+                if (digit < maxDigit) {
+                    if (wasLess) throw new FormatException($"{nameof(RomanNum)}.{nameof(Parse)}: недопустимая последовательность: более 1 цифры меньше перед '{input[^1]}'");
+                    wasLess = true;
+                } else {
+                    maxDigit = digit;
+                    wasLess = false;
+                }
+
+                if (prevDigit > digit && !((digit == 1 && (prevDigit == 5 || prevDigit == 10)) ||
+                    (digit == 10 && (prevDigit == 50 || prevDigit == 100)) || (digit == 100 && (prevDigit == 500 || prevDigit == 1000)))) {
+                    throw new FormatException($"{nameof(RomanNum)}.{nameof(Parse)}: Недопустимая комбинация '{c}' в позиции {pos}");
                 }
 
                 value += digit >= prevDigit ? digit : -digit;
                 prevDigit = digit;
             }
-            if (errors.Any()) throw new FormatException(string.Join("; ", errors));
             return new(value);
         }
         public static int DigitalValue(string digit) => digit switch {
