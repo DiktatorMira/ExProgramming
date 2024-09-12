@@ -1,9 +1,11 @@
 using App;
+using System.Collections.ObjectModel;
+using System.Reflection;
 
 namespace Test {
     [TestClass]
     public class RomanNumberTest {
-        Dictionary<string, int> digitValues = new() {
+        private readonly Dictionary<string, int> digitValues = new() {
             {"N", 0},
             {"I", 1 },
             {"V", 5 },
@@ -14,104 +16,89 @@ namespace Test {
             {"M", 1000}
         };
         [TestMethod]
+        public void CheckSubsTest() {
+            Type? rnType = typeof(RomanNum);
+            MethodInfo? m1Info = rnType.GetMethod("CheckSubs", BindingFlags.NonPublic | BindingFlags.Static);
+
+            string[] validCases = { "IV", "IX", "XL", "XC", "CD", "CM", "MCMXCIV" };
+            foreach (var validCase in validCases) m1Info?.Invoke(null, [validCase]);
+
+            string[] invalidCases = { "IIV", "IIX", "XXL", "XXC", "CCD", "CCM", "IIVX", "IIXX", "IVIV", "IXIX" };
+            foreach (var invalidCase in invalidCases) {
+                var ex = Assert.ThrowsException<TargetInvocationException>(
+                    () => m1Info?.Invoke(null, [invalidCase]), $"CheckSubs '{invalidCase}' должен выдавать FormatException"
+                );
+                Assert.IsInstanceOfType<FormatException>(ex.InnerException, "CheckSubs: FormatException из InnerException");
+            }
+        }
+        [TestMethod]
+        public void CheckSymbolsTest()  {
+            Type? rnType = typeof(RomanNum);
+            MethodInfo? m1Info = rnType.GetMethod("CheckSymbols", BindingFlags.NonPublic | BindingFlags.Static);
+
+            string[] validCases = { "I", "V", "X", "L", "C", "D", "M", "MCMLIV", "MMXXIII" };
+            foreach (var validCase in validCases) m1Info?.Invoke(null, [validCase]);
+
+            string[] invalidCases = { "A", "E", "K", "O", "P", "R", "S", "T", "U", "W", "Y", "Z", "MCMLIVA", "MM23" };
+            foreach (var invalidCase in invalidCases) {
+                var ex = Assert.ThrowsException<TargetInvocationException>(
+                    () => m1Info?.Invoke(null, [invalidCase]),
+                    $"CheckSymbols '{invalidCase}' должен выдать FormatException"
+                );
+                Assert.IsInstanceOfType<FormatException>(ex.InnerException,  "CheckSymbols: FormatException из InnerException");
+            }
+        }
+        [TestMethod]
+        public void CheckPairsTest() {
+            Type? rnType = typeof(RomanNum);
+            MethodInfo? m1Info = rnType.GetMethod("CheckPairs", BindingFlags.NonPublic | BindingFlags.Static);
+
+            string[] validCases = { "IV", "IX", "XL", "XC", "CD", "CM", "MCMLIV", "MMXXIII" };
+            foreach (var validCase in validCases) m1Info?.Invoke(null, [validCase]);
+
+            string[] invalidCases = { "IC", "ID", "IM", "XM", "VX", "VL", "VC", "VD", "VM", "LC", "LD", "LM", "DM" };
+            foreach (var invalidCase in invalidCases) {
+                var ex = Assert.ThrowsException<TargetInvocationException>(
+                    () => m1Info?.Invoke(null, [invalidCase]),
+                    $"CheckPairs '{invalidCase}' должен выдать FormatException"
+                );
+                Assert.IsInstanceOfType<FormatException>(ex.InnerException, "CheckPairs: FormatException из InnerException");
+            }
+        }
+        [TestMethod]
+        public void CheckFormatTest() {
+            Type? rnType = typeof(RomanNum);
+            MethodInfo? m1Info = rnType.GetMethod("CheckFormat", BindingFlags.NonPublic | BindingFlags.Static);
+
+            string[] validCases = { "IV", "IX", "XL", "XC", "CD", "CM", "MCMLIV", "MMXXIII", "III", "VIII" };
+            foreach (var validCase in validCases) m1Info?.Invoke(null, [validCase]);
+
+            string[] invalidCases = { "IIII", "XXXX", "CCCC", "MMMM", "VV", "LL", "DD", "IIV", "IIX", "XXL", "XXC", "CCD", "CCM" };
+            foreach (var invalidCase in invalidCases) {
+                var ex = Assert.ThrowsException<TargetInvocationException>(
+                    () => m1Info?.Invoke(null, [invalidCase]),
+                    $"CheckFormat '{invalidCase}' должен выдать FormatException"
+                );
+                Assert.IsInstanceOfType<FormatException>(ex.InnerException, "CheckFormat: FormatException из InnerException");
+            }
+        }
+        [TestMethod]
+        public void CheckValidityTest() {
+            Type? rnType = typeof(RomanNum);
+            MethodInfo? m1Info = rnType.GetMethod("CheckValidity", BindingFlags.NonPublic | BindingFlags.Static);
+            m1Info?.Invoke(null, ["IX"]);
+
+            string[] testCases = ["IXIX", "IXX", "IVIV", "XCC", "IXIV", "XCXL", "CMCD"];
+            foreach (var testCase in testCases) {
+                var ex = Assert.ThrowsException<TargetInvocationException>(
+                    () => m1Info?.Invoke(null, [testCase]),
+                    $"CheckValidity '{testCase}' должен выдать FormatException"
+                );
+                Assert.IsInstanceOfType<FormatException>(ex.InnerException, "CheckValidity: FormatException из InnerException");
+            }
+        }
+        [TestMethod]
         public void ParseTest() {
-            //Dictionary<string, int> testCases1 = new() {
-            //    {"N", 0},
-            //    {"I", 1},
-            //    {"II", 2},
-            //    {"III", 3},
-            //    {"IIII", 4},
-            //    {"IV", 4},
-            //    {"V", 5},
-            //    {"VI", 6},
-            //    {"VII", 7},
-            //    {"VIII", 8},
-            //    {"VIIII", 9},
-            //    {"IX", 9},
-            //    {"X", 10},
-            //    {"XI", 11},
-            //    {"XII", 12},
-            //    {"XIII", 13},
-            //    {"XIIII", 14},
-            //    {"XIV", 14},
-            //    {"XV", 15},
-            //    {"XVI", 16},
-            //    {"XX", 20},
-            //    {"XXX", 30},
-            //    {"XL", 40},
-            //    {"XXXX", 40},
-            //    {"L", 50},
-            //    {"LX", 60},
-            //    {"LXXXX", 90},
-            //    {"XC", 90},
-            //    {"C", 100},
-            //    {"CC", 200},
-            //    {"CCC", 300},
-            //    {"CD", 400},
-            //    {"D", 500},
-            //    {"DC", 600},
-            //    {"DCCC", 800},
-            //    {"CM", 900},
-            //    {"M", 1000},
-            //    {"MC", 1100},
-            //    {"MCM", 1900},
-            //    {"MM", 2000},
-            //    {"MMM", 3000},
-            //    {"MMMM", 4000}
-            //};
-            //foreach (var testCase in testCases1) {
-            //    RomanNum rn = RomanNum.Parse(testCase.Key);
-            //    Assert.IsNotNull(rn);
-            //    Assert.AreEqual(testCase.Value, rn.Number, $"{testCase.Key} -> {testCase.Value}");
-            //}
-
-            //Dictionary<string, (char, int)[]> testCases2 = new() {
-            //    {"W", new[] {('W', 0)}},
-            //    {"Q", new[] {('Q', 0)}},
-            //    {"s", new[] {('s', 0)}},
-            //    {"Xd", new[] {('d', 1)}},
-            //    {"SWXF", new[] { ('S', 0), ('W', 1), ('F', 3) }},
-            //    {"AIXL", new[] { ('A', 0) }},
-            //    {"MMQ", new[] { ('Q', 2) }},
-            //    {"XDDX", new[] { ('D', 1), ('D', 2) }},
-            //    {"YIYV", new[] { ('Y', 0), ('Y', 2) }},
-            //};
-            //foreach (var testCase in testCases2) {
-            //    var ex = Assert.ThrowsException<FormatException>(
-            //        () => RomanNum.Parse(testCase.Key),
-            //        $"{nameof(FormatException)} анализ '{testCase.Key}' должен выдать"
-            //    );
-            //    foreach (var (symbol, position) in testCase.Value) {
-            //        Assert.IsTrue(ex.Message.Contains($"Недопустимый символ '{symbol}' в позиции {position}"),
-            //            $"{nameof(FormatException)} должен содержать данные о символе '{symbol}' в позиции {position}. " +
-            //            $"Case: '{testCase.Key}', ex.Message: '{ex.Message}'"
-            //        );
-            //    }
-            //}
-
-            //Dictionary<string, Object[]> invTestCases = new() {
-            //    { "IM",  ['I', 'M', 0] },
-            //    { "XIM", ['I', 'M', 1] },
-            //    { "IMX", ['I', 'M', 0] },
-            //    { "XMD", ['X', 'M', 0] },
-            //    { "XID", ['I', 'D', 1] },
-            //    { "ID", ['I', 'D', 0] },
-            //    { "VX", ['V', 'X', 0] },
-            //    { "LC", ['L', 'C', 0] },
-            //    { "VV", ['V', 'V', 0] },
-            //    { "LL", ['L', 'L', 0] }
-            //};
-            //foreach (var testCase in invTestCases) {
-            //    var ex = Assert.ThrowsException<FormatException>(
-            //        () => RomanNum.Parse(testCase.Key),
-            //        $"{nameof(FormatException)} Парсинг '{testCase.Key}' должен выбросить исключение"
-            //    );
-            //    Assert.IsTrue(
-            //        ex.Message.Contains($"Неверный порядок '{testCase.Value[0]}' перед '{testCase.Value[1]}' в позиции {testCase.Value[2]}"),
-            //        $"FormatException должен содержать данные о неправильно упорядоченных символах. TestCase: '{testCase.Key}', ex.Message: '{ex.Message}'"
-            //    );
-            //}
-
             string[] testCases3 = {
                 "IXC", "IIX", "VIX",
                 "IIXC", "IIIX", "VIIX",
