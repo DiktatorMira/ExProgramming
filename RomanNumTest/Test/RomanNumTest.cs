@@ -1,7 +1,14 @@
 using App;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using System.Reflection;
 
 namespace Test {
+    class TestCase {
+        public string? Source { get; set; }
+        public int? Value { get; set; }
+        public Type? ExceptionType { get; set; }
+        public IEnumerable<string>? ExceptionMessageParts { get; set; }
+    }
     [TestClass]
     public class RomanNumberTest {
         private readonly Dictionary<string, int> digitValues = new() {
@@ -72,31 +79,90 @@ namespace Test {
         }
         [TestMethod]
         public void ParseTest() {
-            var testCases = new Dictionary<string, int>() {
-                { "N",      0 },
-                { "I",      1 },
-                { "II",     2 },
-                { "III",    3 },
-                { "IV",     4 },
-                { "V",      5 },
-                { "VI",     6 },
-                { "VII",    7 },
-                { "VIII",   8 },
-                { "D",      500 },
-                { "CM",     900 },
-                { "M",      1000 },
-                { "MC",     1100 },
-                { "MCM",    1900 },
-                { "MM",     2000 },
-            };
-            foreach (var testCase in testCases) {
-                RomanNum rn = RomanNumFactory.Parse(testCase.Key);
+            var Assert_ThrowsException_Methods = typeof(Assert).GetMethods().Where(x => x.Name == "ThrowsException").Where(x => x.IsGenericMethod);
+            var Assert_ThrowsException_Method = Assert_ThrowsException_Methods.Skip(3).FirstOrDefault();
+
+            TestCase[] testCases1 = [
+                new(){Source ="N", Value = 0},
+                new(){Source ="I", Value = 1},
+                new(){Source ="II", Value = 2},
+                new(){Source ="III", Value = 3},
+                new(){Source ="IV", Value = 4},
+                new(){Source ="V", Value = 5},
+                new(){Source ="VI", Value = 6},
+                new(){Source ="VII", Value = 7},
+                new(){Source ="VIII", Value = 8},
+                new(){Source ="D", Value = 500},
+                new(){Source ="CM", Value = 900},
+                new(){Source ="M", Value = 1000},
+                new(){Source ="MC", Value = 1100},
+                new(){Source ="MCM", Value = 1900},
+                new(){Source ="MM", Value = 2000},
+            ];
+            foreach (TestCase testCase in testCases1) {
+                RomanNum rn = RomanNumFactory.Parse(testCase.Source!);
                 Assert.IsNotNull(rn);
-                Assert.AreEqual(
-                    testCase.Value,
-                    rn.value,
-                    $"Ошибка разбора {testCase.Key}. Ожидалось {testCase.Value}, получено {rn.value}."
+                Assert.AreEqual(testCase.Value, rn.value, $"{testCase.Source} синтаксический анализ не удался. Ожидалось {testCase.Value}, получено {rn.value}.");
+            }
+
+            var formatExceptionType = typeof(FormatException);
+            string part1Template = "Неверный символ '{0}' в позиции {1}";
+            TestCase[] testCases2 = [
+                new(){Source = "W", ExceptionType = formatExceptionType, ExceptionMessageParts=[string.Format(part1Template, 'W', 0)]},
+                new(){Source = "Q", ExceptionType = formatExceptionType, ExceptionMessageParts=[string.Format(part1Template, 'Q', 0)]},
+                new(){Source = "s", ExceptionType = formatExceptionType, ExceptionMessageParts=[string.Format(part1Template, 's', 0)]},
+                new(){Source = "sX", ExceptionType = formatExceptionType, ExceptionMessageParts=[string.Format(part1Template, 's', 0)]},
+                new(){Source = "Xd", ExceptionType = formatExceptionType, ExceptionMessageParts=[string.Format(part1Template, 'd', 1)]},
+            ];
+
+            foreach (TestCase testCase in testCases2) {
+                dynamic? ex = Assert_ThrowsException_Method?.MakeGenericMethod(testCase.ExceptionType!).Invoke(null, [() => RomanNumFactory.Parse(testCase.Source!), $"Parse('{testCase.Source}') должен выдать FormatException"]);
+                Assert.IsTrue(ex!.Message.Contains(testCase.ExceptionMessageParts!.First()),
+                    $"Parse('{testCase.Source}') FormatException должен содержать '{testCase.ExceptionMessageParts!.First()}'");
+            }
+
+            TestCase[] testCases3 = {
+                new() { Source = "IM",  ExceptionMessageParts = new[] { "Invalid order 'I' before 'M' in position 0" }, ExceptionType = formatExceptionType },
+                new() { Source = "XIM", ExceptionMessageParts = new[] { "Invalid order 'I' before 'M' in position 1" }, ExceptionType = formatExceptionType },
+                new() { Source = "IMX", ExceptionMessageParts = new[] { "Invalid order 'I' before 'M' in position 0" }, ExceptionType = formatExceptionType },
+                new() { Source = "XMD", ExceptionMessageParts = new[] { "Invalid order 'X' before 'M' in position 0" }, ExceptionType = formatExceptionType },
+                new() { Source = "XID", ExceptionMessageParts = new[] { "Invalid order 'I' before 'D' in position 1" }, ExceptionType = formatExceptionType },
+                new() { Source = "VX",  ExceptionMessageParts = new[] { "Invalid order 'V' before 'X' in position 0" }, ExceptionType = formatExceptionType },
+                new() { Source = "VL",  ExceptionMessageParts = new[] { "Invalid order 'V' before 'L' in position 0" }, ExceptionType = formatExceptionType },
+                new() { Source = "LC",  ExceptionMessageParts = new[] { "Invalid order 'L' before 'C' in position 0" }, ExceptionType = formatExceptionType },
+                new() { Source = "DM",  ExceptionMessageParts = new[] { "Invalid order 'D' before 'M' in position 0" }, ExceptionType = formatExceptionType }
+            };
+            foreach (var testCase in testCases3) {
+                var ex = Assert.ThrowsException<FormatException>(
+                    () => RomanNumFactory.Parse(testCase.Source!),
+                    $"Parse '{testCase.Source}' должен выдать FormatException"
                 );
+                Assert.IsTrue(
+                    ex.Message.Contains(testCase.ExceptionMessageParts!.First()),
+                    "FormatException должен содержать данные о неправильно упорядоченных символах и их положении"
+                );
+            }
+
+            TestCase[] testCases4 = {
+                new() { Source = "IXIX", ExceptionMessageParts = new[] { "Invalid" }, ExceptionType = formatExceptionType },
+                new() { Source = "IXX",  ExceptionMessageParts = new[] { "Invalid" }, ExceptionType = formatExceptionType },
+                new() { Source = "IXIV", ExceptionMessageParts = new[] { "Invalid" }, ExceptionType = formatExceptionType },
+                new() { Source = "XCXC", ExceptionMessageParts = new[] { "Invalid" }, ExceptionType = formatExceptionType },
+                new() { Source = "CMM",  ExceptionMessageParts = new[] { "Invalid" }, ExceptionType = formatExceptionType },
+                new() { Source = "CMCD", ExceptionMessageParts = new[] { "Invalid" }, ExceptionType = formatExceptionType },
+                new() { Source = "XCXL", ExceptionMessageParts = new[] { "Invalid" }, ExceptionType = formatExceptionType },
+                new() { Source = "XCC",  ExceptionMessageParts = new[] { "Invalid" }, ExceptionType = formatExceptionType },
+                new() { Source = "XCCI", ExceptionMessageParts = new[] { "Invalid" }, ExceptionType = formatExceptionType }
+            };
+            foreach (TestCase testCase in testCases4) {
+                var ex = Assert.ThrowsException<FormatException>(
+                    () => RomanNumFactory.Parse(testCase.Source!),
+                    $"Parse('{testCase.Source}') должен выдать FormatException"
+                );
+                foreach (var part in testCase.ExceptionMessageParts!) {
+                    Assert.IsTrue(ex.Message.Contains(part),
+                        $"Parse('{testCase.Source}') FormatException должен создержать '{part}'. Нынешнее сообщение: {ex.Message}");
+                }
             }
         }
         [TestMethod]

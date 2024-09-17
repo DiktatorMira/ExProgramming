@@ -1,5 +1,16 @@
 ﻿namespace App {
     public class RomanNumFactory {
+        public static int DigitValue(string digit) => digit switch {
+            "N" => 0,
+            "I" => 1,
+            "V" => 5,
+            "X" => 10,
+            "L" => 50,
+            "C" => 100,
+            "D" => 500,
+            "M" => 1000,
+            _ => throw new ArgumentException($"{nameof(RomanNum)}::{nameof(DigitValue)}: 'digit' имеет недопустимое значение '{digit}'")
+        };
         public static RomanNum Parse(string input) => new(ParseAsInt(input));
         public static int ParseAsInt(string input) {
             int value = 0, rightDigit = 0;
