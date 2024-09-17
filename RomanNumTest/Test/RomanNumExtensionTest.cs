@@ -8,6 +8,8 @@ namespace Test {
             RomanNum rn1 = new(1), rn2 = new(2);
             Assert.AreEqual(3, rn2.Plus(rn1).value);
             Assert.AreEqual(7, rn2.Plus(rn1, rn2, rn2).value);
+            Assert.AreNotSame(rn1, rn1.Plus(rn1));
+            Assert.AreNotSame(rn1, rn1.Plus(rn2));
             List<object[]> testCases = new List<object[]>() {
                 new object[] {"IV","VI","X" },
                 new object[] {"IV","N","IV" },
